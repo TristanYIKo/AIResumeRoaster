@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Could not extract text from file" }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = `You are a blunt but kind career coach for university students. The user has uploaded their resume. Read it and respond in STRICT JSON with this exact shape:
 
