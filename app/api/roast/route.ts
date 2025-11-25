@@ -26,22 +26,19 @@ export async function POST(req: NextRequest) {
 
         if (file.type === "application/pdf") {
             try {
+                // Dynamic import to avoid webpack bundling issues
                 // @ts-ignore
-                const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
-                const typedArray = new Uint8Array(buffer);
-                const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+                const pdfParse = (await import("pdf-parse")).default;
+                const data = await pdfParse(buffer);
+                text = data.text;
 
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map((item: any) => item.str).join(" ");
-                    fullText += pageText + "\n";
+                if (!text || text.trim().length < 10) {
+                    return NextResponse.json({
+                        error: "Could not extract text from PDF. It might be an image-based PDF."
+                    }, { status: 400 });
                 }
-                text = fullText;
             } catch (err) {
                 console.error("PDF parsing error:", err);
-                console.error("Error type:", typeof err);
                 return NextResponse.json({
                     error: "Failed to parse PDF. Please try a .txt or .docx file.",
                     debug: err instanceof Error ? err.message : String(err)
@@ -63,7 +60,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Could not extract text from file" }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `You are a blunt but kind career coach for university students. The user has uploaded their resume. Read it and respond in STRICT JSON with this exact shape:
 
