@@ -52,11 +52,22 @@ const config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                // Custom colors for the roast theme
+                roast: {
+                    bg: "#E0F2FE", // Light blue
+                    card: "#FEF9C3", // Light yellow
+                    text: "#1F2937", // Dark gray
+                    orange: "#FB923C",
+                    red: "#EF4444",
+                }
             },
             borderRadius: {
                 lg: "var(--radius)",
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
+            },
+            fontFamily: {
+                chewy: ["var(--font-chewy)", "cursive"],
             },
             keyframes: {
                 "accordion-down": {
@@ -67,10 +78,15 @@ const config = {
                     from: { height: "var(--radix-accordion-content-height)" },
                     to: { height: "0" },
                 },
+                float: {
+                    "0%, 100%": { transform: "translateY(0)" },
+                    "50%": { transform: "translateY(-10px)" },
+                }
             },
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
+                float: "float 3s ease-in-out infinite",
             },
         },
     },

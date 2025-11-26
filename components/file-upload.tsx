@@ -101,11 +101,15 @@ export function FileUpload({ onRoastComplete }: FileUploadProps) {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
-            <Card className={cn("border-2 border-dashed transition-colors", dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25")}>
+        <div className="w-full max-w-md mx-auto font-chewy">
+            <Card className={cn(
+                "border-4 border-dashed border-roast-text/30 bg-roast-card transition-all duration-300 relative overflow-visible",
+                dragActive ? "border-roast-orange scale-105" : "",
+                "shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-3xl"
+            )}>
                 <CardContent className="p-0">
                     <div
-                        className="flex flex-col items-center justify-center p-10 text-center cursor-pointer"
+                        className="flex flex-col items-center justify-center p-8 text-center cursor-pointer min-h-[300px]"
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
                         onDragOver={handleDrag}
@@ -121,18 +125,18 @@ export function FileUpload({ onRoastComplete }: FileUploadProps) {
                         />
 
                         {file ? (
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="p-4 rounded-full bg-primary/10">
-                                    <File className="w-8 h-8 text-primary" />
+                            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+                                <div className="p-4 rounded-full bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                    <File className="w-10 h-10 text-roast-text" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-sm">{file.name}</p>
-                                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
+                                    <p className="font-bold text-xl text-roast-text">{file.name}</p>
+                                    <p className="text-sm text-roast-text/70">{(file.size / 1024).toFixed(2)} KB</p>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-destructive hover:text-destructive"
+                                    className="text-roast-red hover:text-roast-red/80 hover:bg-roast-red/10 font-bold"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setFile(null);
@@ -142,13 +146,24 @@ export function FileUpload({ onRoastComplete }: FileUploadProps) {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="p-4 rounded-full bg-muted">
-                                    <Upload className="w-8 h-8 text-muted-foreground" />
+                            <div className="flex flex-col items-center gap-6">
+                                {/* Robot Placeholder */}
+                                <div className="w-40 h-40 relative">
+                                    <img
+                                        src="/roast-bot-mascot.png"
+                                        alt="Roast-Bot"
+                                        className="w-full h-full object-contain"
+                                    />
+                                    <div className="absolute -right-2 -top-2 bg-roast-orange rounded-full p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] animate-bounce">
+                                        <Upload className="w-4 h-4 text-white" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-medium">Click or drag file to upload</p>
-                                    <p className="text-xs text-muted-foreground mt-1">PDF, DOC, DOCX, TXT (Max 5MB)</p>
+
+                                <div className="space-y-2">
+                                    <p className="font-bold text-2xl text-roast-text">Feed the Roast-bot</p>
+                                    <p className="text-sm font-medium text-roast-text/70 uppercase tracking-wide">
+                                        PDF, DOC, DOCX, TXT - Max 5MB
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -157,25 +172,27 @@ export function FileUpload({ onRoastComplete }: FileUploadProps) {
             </Card>
 
             {error && (
-                <div className="mt-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md flex items-center gap-2">
-                    <X className="w-4 h-4" />
+                <div className="mt-4 p-3 text-sm font-bold text-white bg-roast-red rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <X className="w-5 h-5" />
                     {error}
                 </div>
             )}
 
             <Button
-                className="w-full mt-6"
-                size="lg"
+                className={cn(
+                    "w-full mt-8 h-14 text-xl font-bold rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-y-1 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
+                    "bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white"
+                )}
                 disabled={!file || loading}
                 onClick={handleSubmit}
             >
                 {loading ? (
                     <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                         Cooking your roast...
                     </>
                 ) : (
-                    "Roast Me 🔥"
+                    "Start the Roasting & Learning! 🔥"
                 )}
             </Button>
         </div>

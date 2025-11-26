@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Chewy } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"] });
+const chewy = Chewy({
+    weight: "400",
+    subsets: ["latin"],
+    variable: "--font-chewy",
+});
 
 export const metadata: Metadata = {
     title: "AI Career Roast",
-    description: "Get humbled. Improve your career.",
+    description: "Get your resume roasted by AI",
 };
 
 export default function RootLayout({
@@ -16,8 +19,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className="dark">
-            <body className={cn(inter.className, "min-h-screen bg-background font-sans antialiased")}>
+        <html lang="en">
+            <body className={chewy.className}>
                 {children}
             </body>
         </html>

@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Flame, Lightbulb, TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import ReactMarkdown from "react-markdown";
+
 interface RoastResultProps {
     data: {
         roastBullets: string[];
@@ -57,9 +59,21 @@ export function RoastResult({ data, onReset }: RoastResultProps) {
                 <CardContent>
                     <ul className="space-y-3">
                         {data.roastBullets.map((bullet, i) => (
-                            <motion.li key={i} variants={item} className="flex gap-3 text-sm md:text-base">
-                                <span className="text-xl">💀</span>
-                                <span>{bullet}</span>
+                            <motion.li key={i} variants={item} className="flex gap-3 text-sm md:text-base items-start">
+                                <span className="text-xl mt-0.5">💀</span>
+                                <div className="flex-1">
+                                    <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0 [&>ul]:m-0 [&>li]:m-0">
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ node, ...props }) => <p {...props} className="leading-relaxed" />,
+                                                strong: ({ node, ...props }) => <span {...props} className="font-bold text-foreground" />,
+                                                em: ({ node, ...props }) => <span {...props} className="italic" />
+                                            }}
+                                        >
+                                            {bullet}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
                             </motion.li>
                         ))}
                     </ul>
@@ -98,9 +112,20 @@ export function RoastResult({ data, onReset }: RoastResultProps) {
                     <CardContent>
                         <ul className="space-y-2">
                             {data.tips.map((tip, i) => (
-                                <motion.li key={i} variants={item} className="text-sm flex gap-2">
-                                    <span className="text-primary">•</span>
-                                    {tip}
+                                <motion.li key={i} variants={item} className="text-sm flex gap-2 items-start">
+                                    <span className="text-primary mt-1">•</span>
+                                    <div className="flex-1">
+                                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0">
+                                            <ReactMarkdown
+                                                components={{
+                                                    p: ({ node, ...props }) => <p {...props} className="leading-relaxed" />,
+                                                    strong: ({ node, ...props }) => <span {...props} className="font-bold text-foreground" />
+                                                }}
+                                            >
+                                                {tip}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </div>
                                 </motion.li>
                             ))}
                         </ul>
