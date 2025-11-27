@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import { RoastResult } from "@/components/roast-result";
@@ -11,11 +12,14 @@ export default function Home() {
     return (
         <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-roast-bg relative overflow-hidden font-chewy">
             {/* Background Robots */}
-            <div className="absolute inset-0 z-0 opacity-100 pointer-events-none">
-                <img
-                    src="/robot-background-rich.png"
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/robot-background-clean-v3.png"
                     alt="Background Robots"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    quality={100}
+                    priority
                 />
             </div>
 
