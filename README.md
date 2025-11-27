@@ -2,7 +2,8 @@
 
 This is a personal web project built with Next.js. The goal of this site is to showcase ideas, projects, and interactive features in a clean and engaging way.
 
-The website includes:
+The website includes: 
+
 • A simple, modern layout  
 • Sections to highlight different projects or content  
 • Interactive elements for a better user experience  
