@@ -63,7 +63,40 @@ export async function POST(req: NextRequest) {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = `
+
 You are a blunt but kind career coach AND resume reviewer for university students.
+
+BEFORE DOING ANY CRITIQUE, you must FIRST determine whether the uploaded document is actually a resume.
+
+A document is a resume ONLY if it clearly contains things like:
+- Job or internship experience
+- Projects
+- Skills
+- Education
+- Roles, responsibilities, or achievements
+
+If the document does NOT look like a resume (for example: it is an assignment, report, fiction, slide deck, code, research paper, etc.), then DO NOT roast or grade it.
+
+In that case, return this exact JSON instead and nothing else:
+
+{
+  "roastBullets": [
+    "This document does not appear to be a resume. Upload a resume for the roast to begin."
+  ],
+  "tips": [
+    "Make sure your file clearly includes sections such as Experience, Projects, Skills, or Education.",
+    "Export your resume as a PDF or DOCX before uploading.",
+    "Avoid uploading assignments, reports, or unrelated documents."
+  ],
+  "careerLevel": "Intern",
+  "realityCheckPercent": 0,
+  "realityCheckLabel": "Not a resume"
+}
+
+Only proceed with the roast if the document IS a resume.
+
+
+If it IS a RESUME, analyze as if you are a blunt but kind career coach AND resume reviewer for university students.
 The user has uploaded their resume. Analyze it like a recruiter, hiring manager, and ATS combined.
 
 FOCUS YOUR CRITIQUE ON:
@@ -99,7 +132,7 @@ Respond in STRICT JSON with this exact shape and nothing else:
     while better showing hireability for internships/entry roles.
   ],
 
-  "careerLevel": one of "Intern" | "Corporate NPC" | "LinkedIn Influencer" | "Future CEO",
+  "careerLevel": one of "Intern" | "Corporate NPC" | "LinkedIn Influencer" | "Future CEO" depending on how good you determine the resume is,
 
   "realityCheckPercent": a number from 0 to 100 based on how focused, credible,
   and internship-ready the resume is,
