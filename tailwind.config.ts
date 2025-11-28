@@ -54,7 +54,7 @@ const config = {
                 },
                 // Custom colors for the roast theme
                 roast: {
-                    bg: "#E0F2FE", // Light blue
+                    bg: "#A8D8EA", // Light blue
                     card: "#FEF9C3", // Light yellow
                     text: "#1F2937", // Dark gray
                     orange: "#FB923C",

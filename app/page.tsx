@@ -12,9 +12,9 @@ export default function Home() {
     return (
         <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-roast-bg relative overflow-hidden font-chewy">
             {/* Background Robots */}
-            <div className="absolute inset-0 z-0">
+            <div className="fixed inset-0 z-0">
                 <Image
-                    src="/robot-background-clean-v3.png"
+                    src="/robot-background-plain.png"
                     alt="Background Robots"
                     fill
                     className="object-cover"
@@ -23,7 +23,7 @@ export default function Home() {
                 />
             </div>
 
-            <div className="relative flex flex-col items-center justify-center gap-6 w-full max-w-2xl z-10">
+            <div className="relative flex flex-col items-center justify-center gap-6 w-full max-w-6xl z-10">
                 <div className="text-center space-y-2">
                     <h1 className="text-5xl md:text-7xl font-bold tracking-wider text-roast-text drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">
                         Roast-Bot 🔥
