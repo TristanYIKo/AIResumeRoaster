@@ -1,96 +1,33 @@
 import type { Config } from "tailwindcss";
 
-const config = {
-    darkMode: ["class"],
-    content: [
-        './pages/**/*.{ts,tsx}',
-        './components/**/*.{ts,tsx}',
-        './app/**/*.{ts,tsx}',
-        './src/**/*.{ts,tsx}',
-    ],
-    prefix: "",
+// Colours are CSS variables (app/globals.css) so alpha modifiers like bg-hot/10 work.
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
+const config: Config = {
+    content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
     theme: {
-        container: {
-            center: true,
-            padding: "2rem",
-            screens: {
-                "2xl": "1400px",
-            },
-        },
         extend: {
             colors: {
-                border: "hsl(var(--border))",
-                input: "hsl(var(--input))",
-                ring: "hsl(var(--ring))",
-                background: "hsl(var(--background))",
-                foreground: "hsl(var(--foreground))",
-                primary: {
-                    DEFAULT: "hsl(var(--primary))",
-                    foreground: "hsl(var(--primary-foreground))",
-                },
-                secondary: {
-                    DEFAULT: "hsl(var(--secondary))",
-                    foreground: "hsl(var(--secondary-foreground))",
-                },
-                destructive: {
-                    DEFAULT: "hsl(var(--destructive))",
-                    foreground: "hsl(var(--destructive-foreground))",
-                },
-                muted: {
-                    DEFAULT: "hsl(var(--muted))",
-                    foreground: "hsl(var(--muted-foreground))",
-                },
-                accent: {
-                    DEFAULT: "hsl(var(--accent))",
-                    foreground: "hsl(var(--accent-foreground))",
-                },
-                popover: {
-                    DEFAULT: "hsl(var(--popover))",
-                    foreground: "hsl(var(--popover-foreground))",
-                },
-                card: {
-                    DEFAULT: "hsl(var(--card))",
-                    foreground: "hsl(var(--card-foreground))",
-                },
-                // Custom colors for the roast theme
-                roast: {
-                    bg: "#A8D8EA", // Light blue
-                    card: "#FEF9C3", // Light yellow
-                    text: "#1F2937", // Dark gray
-                    orange: "#FB923C",
-                    red: "#EF4444",
-                }
-            },
-            borderRadius: {
-                lg: "var(--radius)",
-                md: "calc(var(--radius) - 2px)",
-                sm: "calc(var(--radius) - 4px)",
+                cream: token("cream"),
+                paper: token("paper"),
+                peach: token("peach"),
+                ink: { DEFAULT: token("ink"), 2: token("ink-2") },
+                hot: { DEFAULT: token("hot"), ink: token("hot-ink") },
+                good: token("good"),
+                fair: token("fair"),
+                weak: token("weak"),
             },
             fontFamily: {
-                chewy: ["var(--font-chewy)", "cursive"],
+                sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+                hand: ["var(--font-hand)", "cursive"],
             },
-            keyframes: {
-                "accordion-down": {
-                    from: { height: "0" },
-                    to: { height: "var(--radix-accordion-content-height)" },
-                },
-                "accordion-up": {
-                    from: { height: "var(--radix-accordion-content-height)" },
-                    to: { height: "0" },
-                },
-                float: {
-                    "0%, 100%": { transform: "translateY(0)" },
-                    "50%": { transform: "translateY(-10px)" },
-                }
-            },
-            animation: {
-                "accordion-down": "accordion-down 0.2s ease-out",
-                "accordion-up": "accordion-up 0.2s ease-out",
-                float: "float 3s ease-in-out infinite",
+            boxShadow: {
+                card: "0 1px 0 rgb(var(--ink) / 0.04), 0 28px 56px -32px rgb(166 72 20 / 0.45)",
+                hot: "0 12px 28px -12px rgb(var(--hot) / 0.75)",
             },
         },
     },
-    plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+    plugins: [],
+};
 
 export default config;
