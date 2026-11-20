@@ -1,169 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import mammoth from "mammoth";
+import { extractText, ExtractError } from "@/lib/extract";
+import { describeForModel, measure } from "@/lib/signals";
+import { buildUserPrompt, RESPONSE_SCHEMA, SYSTEM_PROMPT } from "@/lib/prompt";
+import { buildReport, ModelOutputError } from "@/lib/scoring";
+import { getTrack, isTrackId, type Track } from "@/lib/tracks";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
-const apiKey = process.env.GEMINI_API_KEY;
-console.log("API Key present:", !!apiKey);
-const genAI = new GoogleGenerativeAI(apiKey || "");
+const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_CHARS = 20_000;
+const MIN_WORDS = 60;
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+const fail = (error: string, status: number) => NextResponse.json({ error }, { status });
 
 export async function POST(req: NextRequest) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        console.error("GEMINI_API_KEY is not set");
+        return fail("The roaster isn't configured yet. Try again later.", 503);
+    }
+
+    let file: File | null = null;
+    let chosen: Track | null = null;
     try {
-        const formData = await req.formData();
-        const file = formData.get("file") as File;
+        const form = await req.formData();
+        const value = form.get("file");
+        file = value instanceof File ? value : null;
+        const track = form.get("track");
+        chosen = isTrackId(track) ? getTrack(track) : null; // "auto" or missing means detect it
+    } catch {
+        return fail("The upload didn't come through. Try again.", 400);
+    }
+    if (!file) return fail("Choose a file to upload.", 400);
+    if (file.size > MAX_BYTES) return fail("That file is over 5 MB. Upload a smaller copy.", 413);
 
-        if (!file) {
-            return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    let text: string;
+    try {
+        text = await extractText(file);
+    } catch (err) {
+        if (err instanceof ExtractError) return fail(err.message, err.status);
+        throw err;
+    }
+
+    const measurements = measure(text);
+    if (measurements.wordCount < MIN_WORDS) {
+        return fail(
+            measurements.wordCount === 0
+                ? "No text could be read from that file. If it's a scanned PDF, export a text-based version."
+                : `Only ${measurements.wordCount} word${measurements.wordCount === 1 ? "" : "s"} came through. Upload your full resume.`,
+            422,
+        );
+    }
+
+    try {
+        const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
+            model: MODEL,
+            systemInstruction: SYSTEM_PROMPT,
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: RESPONSE_SCHEMA,
+                // Low temperature keeps scores stable when the same resume is uploaded twice.
+                temperature: 0.1,
+            },
+        });
+
+        const result = await model.generateContent(
+            buildUserPrompt(describeForModel(measurements), text.slice(0, MAX_CHARS), chosen),
+        );
+        const raw = JSON.parse(result.response.text());
+
+        if (raw?.isResume === false) {
+            const reason = typeof raw.notResumeReason === "string" ? raw.notResumeReason.trim() : "";
+            return fail(`This doesn't look like a resume. ${reason}`.trim(), 422);
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            return NextResponse.json({ error: "File size exceeds 5MB" }, { status: 400 });
-        }
-
-        let text = "";
-        const buffer = Buffer.from(await file.arrayBuffer());
-
-        if (file.type === "application/pdf") {
-            try {
-                // Dynamic import to avoid webpack bundling issues
-                // @ts-ignore
-                const pdfParse = (await import("pdf-parse")).default;
-                const data = await pdfParse(buffer);
-                text = data.text;
-
-                if (!text || text.trim().length < 10) {
-                    return NextResponse.json({
-                        error: "Could not extract text from PDF. It might be an image-based PDF."
-                    }, { status: 400 });
-                }
-            } catch (err) {
-                console.error("PDF parsing error:", err);
-                return NextResponse.json({
-                    error: "Failed to parse PDF. Please try a .txt or .docx file.",
-                    debug: err instanceof Error ? err.message : String(err)
-                }, { status: 400 });
-            }
-        } else if (
-            file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-            file.type === "application/msword"
-        ) {
-            const result = await mammoth.extractRawText({ buffer });
-            text = result.value;
-        } else if (file.type === "text/plain") {
-            text = buffer.toString("utf-8");
-        } else {
-            return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
-        }
-
-        if (!text.trim()) {
-            return NextResponse.json({ error: "Could not extract text from file" }, { status: 400 });
-        }
-
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-        const prompt = `
-
-You are a blunt but kind career coach AND resume reviewer for university students.
-
-BEFORE DOING ANY CRITIQUE, you must FIRST determine whether the uploaded document is actually a resume.
-
-A document is a resume ONLY if it clearly contains things like:
-- Job or internship experience
-- Projects
-- Skills
-- Education
-- Roles, responsibilities, or achievements
-
-If the document does NOT look like a resume (for example: it is an assignment, report, fiction, slide deck, code, research paper, etc.), then DO NOT roast or grade it.
-
-In that case, return this exact JSON instead and nothing else:
-
-{
-  "roastBullets": [
-    "This document does not appear to be a resume. Upload a resume for the roast to begin."
-  ],
-  "tips": [
-    "Make sure your file clearly includes sections such as Experience, Projects, Skills, or Education.",
-    "Export your resume as a PDF or DOCX before uploading.",
-    "Avoid uploading assignments, reports, or unrelated documents."
-  ],
-  "careerLevel": "Intern",
-  "realityCheckPercent": 0,
-  "realityCheckLabel": "Not a resume"
-}
-
-Only proceed with the roast if the document IS a resume.
-
-
-If it IS a RESUME, analyze as if you are a blunt but kind career coach AND resume reviewer for university students.
-The user has uploaded their resume. Analyze it like a recruiter, hiring manager, and ATS combined.
-
-FOCUS YOUR CRITIQUE ON:
-- Bullet points: clarity, length, structure (action + context + result), tense, metrics, and fluff vs impact
-- Consistency: formatting, verb tense, punctuation, and style across all sections
-- Experience & projects: do they clearly show what the user can do? are they specific and outcome-driven?
-- Skills: are they relevant, believable, and supported by experience/projects, or just a buzzword dump?
-- Other sections (education, awards, certs, etc.): are they helping or just taking space?
-- Overall voice: does it sound AI-generated or human? generic or tailored?
-- Hireability: would this resume make you want to interview them for internships/entry-level roles?
-
-STRICT RULES:
-- Do NOT mention graduation dates or timelines.
-- ONLY mention numbers that already exist in bullet points (metrics, results, etc.).
-- Do NOT invent experience, tools, or achievements.
-- No Markdown or HTML formatting (no **bold**, lists, etc.). Plain text only.
-- Roast the resume, not the person. Playful, but constructive.
-
-Respond in STRICT JSON with this exact shape and nothing else:
-
-    {
-  "roastBullets": [
-    4 to 6 short, funny but accurate roasts that target real issues in:
-    bullet structure, vagueness, missing metrics, weak verbs, generic phrasing,
-    poor section balance, AI-sounding language, or unclear career story.
-    Each roast should point to a pattern you actually see in the resume.
-  ],
-
-  "tips": [
-    3 to 5 specific, actionable suggestions on how to:
-    improve bullet formulas, add or sharpen metrics, remove fluff,
-    reorganize sections, make skills more credible, and sound more human
-    while better showing hireability for internships/entry roles.
-  ],
-
-  "careerLevel": one of "Intern" | "Corporate NPC" | "LinkedIn Influencer" | "Future CEO" depending on how good you determine the resume is,
-
-  "realityCheckPercent": a number from 0 to 100 based on how focused, credible,
-  and internship-ready the resume is,
-
-  "realityCheckLabel": a short, punchy phrase summarizing your verdict
-}
-
-    The humor should be playful, not mean. Avoid insulting identity, race, gender, etc. Focus only on resume content and career.
-
-    Resume Text:
-    ${text}`;
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const textResponse = response.text();
-
-        // Clean up markdown code blocks if present
-        const jsonString = textResponse.replace(/^```json\n|\n```$/g, "").trim();
-
-        let jsonResponse;
-        try {
-            jsonResponse = JSON.parse(jsonString);
-        } catch (e) {
-            console.error("Failed to parse JSON from Gemini:", textResponse);
-            return NextResponse.json({ error: "Failed to generate roast" }, { status: 500 });
-        }
-
-        return NextResponse.json(jsonResponse);
-
-    } catch (error: any) {
-        console.error("Error processing roast:", error);
-        return NextResponse.json({ error: "Internal server error", details: error.message }, { status: 500 });
+        return NextResponse.json(buildReport(raw, measurements, file.name, chosen?.id ?? null));
+    } catch (err) {
+        console.error("Roast failed:", err);
+        const message =
+            err instanceof SyntaxError || err instanceof ModelOutputError
+                ? "The review came back incomplete. Run it again."
+                : "The reviewer is unavailable right now. Try again in a minute.";
+        return fail(message, 502);
     }
 }

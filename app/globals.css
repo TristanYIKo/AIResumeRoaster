@@ -2,81 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * One warm light theme on purpose. Shape rule: cards 24-32px, buttons and chips fully rounded.
+ */
 @layer base {
-  :root {
-    --background: 196 61% 79%;
-    /* #E0F2FE */
-    --foreground: 220 13% 18%;
-    /* #1F2937 */
+    :root {
+        color-scheme: light;
+        --cream: 255 246 236;
+        --paper: 255 253 249;
+        --peach: 255 228 209;
+        --ink: 32 26 21;
+        --ink-2: 107 94 84;
+        --hot: 240 78 20;
+        --hot-ink: 196 62 10;
+        --good: 30 132 76;
+        --fair: 143 90 0;
+        --weak: 200 44 44;
+    }
 
-    --card: 54 98% 88%;
-    /* #FEF9C3 */
-    --card-foreground: 220 13% 18%;
+    body {
+        @apply bg-cream font-sans text-ink antialiased;
+    }
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
+    ::selection {
+        background: rgb(var(--hot) / 0.25);
+    }
 
-    --primary: 24 95% 53%;
-    /* Orange-ish */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 220 13% 18%;
-    /* Dark border for neobrutalism */
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 1rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+    :focus-visible {
+        outline: 2.5px solid rgb(var(--hot));
+        outline-offset: 3px;
+    }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+/* Warm heat glow, pinned so it never repaints while scrolling. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(44rem 34rem at 100% 0%, rgb(255 186 140 / 0.6), transparent 70%),
+        radial-gradient(38rem 30rem at 0% 100%, rgb(255 212 128 / 0.5), transparent 70%),
+        radial-gradient(28rem 22rem at 12% 8%, rgb(255 150 120 / 0.2), transparent 70%);
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Paper grain on a fixed, non-interactive layer. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
